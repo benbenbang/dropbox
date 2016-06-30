@@ -165,11 +165,11 @@ html = '''
 	<tbody class="">
 	<tr class="">
 		<td align="left" style="border: 1px solid #007ee5; border-left: 16px solid #007ee5; -webkit-border-radius: 10px; -moz-border-radius: 10px; border-radius: 10px; padding: 10px 15px; font-family: \'Helvetica Neue\', \'Arial\'; font-size: 12px; color: #000000; line-height: 14px;" class="">
-			<img src=\'https://dl.dropboxusercontent.com/u/21770393/logo/dropbox.jpg\' width="64" height="64" border="0" align="right" class="">
+			<img src=\'https://github.com/benbenbang/dropbox/blob/master/asset/dropbox.jpg?raw=true\' width="64" height="64" border="0" align="right" class="">
 			<h1 style="font-family: \'Helvetica Neue\', \'Arial\'; font-size: 20px; font-weight: normal; line-height: 24px; padding: 2px 0; margin: 0 0 6px 0; color: #000000;border-bottom:1px dashed #007ee5;" class="">Attachments</h1>
 			<h2 style="font-family: \'Helvetica Neue\', \'Arial\'; font-size: 14px; font-weight: normal; line-height: 20px; margin: 0 0 6px 0; color: #000000;" class="">The file attachment of this email has been uploaded to the cloud.<br class="">Please download it from the following link:</h2>
 			<ul style="padding-left:0px;" class="">
-				<li style="background:url(\'https://dl.dropboxusercontent.com/u/21770393/logo/zip.png\') no-repeat;background-size:32px 32px;padding:1px 36px 2px;min-height:36px;list-style-type:none;" class="">
+				<li style="background:url(\'https://github.com/benbenbang/dropbox/blob/master/asset/zip.png?raw=true\') no-repeat;background-size:32px 32px;padding:1px 36px 2px;min-height:36px;list-style-type:none;" class="">
 					<a href='%s' class="">%s</a>
 					<br>
 					<a>Click to Dropbox: %s</a>
