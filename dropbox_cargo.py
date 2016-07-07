@@ -4,8 +4,8 @@ import sys, os, time, clipboard, re, zipfile
 import dropbox
 from dropbox.files import FileMetadata, FolderMetadata
 
-import tkinter as tk
-from tkinter import filedialog
+#import tkinter as tk
+#from tkinter import filedialog
 
 home = os.path.expanduser("~")
 #loc_dir = os.path.dirname(os.path.realpath(__file__))
