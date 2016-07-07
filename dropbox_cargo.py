@@ -1,14 +1,75 @@
 # -*- coding: utf-8 -*-
-
-import argparse, contextlib, datetime, os, six, sys, time, unicodedata
+import sys, os, time, clipboard, re, zipfile
 
 import dropbox
 from dropbox.files import FileMetadata, FolderMetadata
 
-import clipboard, re, zipfile
+import tkinter as tk
+from tkinter import filedialog
+
+home = os.path.expanduser("~")
+#loc_dir = os.path.dirname(os.path.realpath(__file__))
+
+#packages_path = os.path.join(loc_dir,'envset/lib/python3.5/site-packages')
+#sys.path.append(packages_path)
+
+'''
+if __name__ == '__main__':
+	root = tk.Tk().withdraw()
+	root.title("CargoLift")
+	app = GUI(master=root)
+
+	w = Canvas(master, width=200, height=100)
+	w.pack()
+	w.create_line(0, 0, 200, 100)
+	w.create_line(0, 100, 200, 0, fill="red", dash=(4, 4))
+	w.create_rectangle(50, 25, 150, 75, fill="blue")
+
+	app.mainloop()
+'''
+
+root = tk.Tk()
+root.withdraw()
+
 
 print("\nUpload You Attachments to Dropbox!")
 print("------------------------------")
+
+#####################################################################################################################
+#	Authentication
+#####################################################################################################################
+
+token_file = os.path.join(home,'.dbtoken')
+ 
+if os.path.isfile(token_file):
+	tkf = open(token_file,'r')
+	tk = tkf.read()
+	tkf.close()
+	access_token = tk.strip()
+
+if access_token =='' or not os.path.isfile(token_file):
+	from dropbox import DropboxOAuth2FlowNoRedirect
+ 
+	print("Somehow this is your first time here, you need to authorize 'CargoLift' to access your dropbox.")
+	print("'CargoLift' will only permitted to access its own folder.")
+ 
+	auth_flow = DropboxOAuth2FlowNoRedirect('oybmjaqexcm635q', 'c0csqnd9u8nwcc7')
+	authorize_url = auth_flow.start()
+	print("1. Go to: " + authorize_url)
+	print("2. Click \"Allow\" (you might have to log in first).")
+	print("3. Copy the authorization code.")
+	auth_code = input("Enter the authorization code here \n>> ").strip()
+ 
+	try:
+		access_token, user_id = auth_flow.finish(auth_code)
+	except Exception as e:
+		print('\n','Error: %s' % (e,))
+ 
+	file_conn = open(token_file,'w+')
+	file_conn.write(access_token)
+	file_conn.close()
+
+	print("Authorization Success!")
 
 #####################################################################################################################
 #	Clock Ticking! 
@@ -17,68 +78,75 @@ print("------------------------------")
 statName = [ "Percent: ","Packing: ", "Uploading: ", "TP: " ]
 
 def update_progress(progress, stat=statName[0]):
-    barLength = 10 # Modify this to change the length of the progress bar
-    status = ""
-    if isinstance(progress, int):
-        progress = float(progress)
-    if not isinstance(progress, float):
-        progress = 0
-        status = "error: progress var must be float\r\n"
-    if progress < 0:
-        progress = 0
-        status = "Halt...\r\n"
-    if progress >= 1:
-        progress = 1
-        status = "Done...\r\n"
-    block = int(round(barLength*progress))
-    text = "\r" + stat + "[{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), format(progress*100,'.2f'), status)
-    sys.stdout.write(text)
-    sys.stdout.flush()
+	barLength = 10 # Modify this to change the length of the progress bar
+	status = ""
+	if isinstance(progress, int):
+		progress = float(progress)
+	if not isinstance(progress, float):
+		progress = 0
+		status = "error: progress var must be float\r\n"
+	if progress < 0:
+		progress = 0
+		status = "Halt...\r\n"
+	if progress >= 1:
+		progress = 1
+		status = "Done...\r\n"
+	block = int(round(barLength*progress))
+	text = "\r" + stat + "[{0}] {1}% {2}".format( "#"*block + "-"*(barLength-block), format(progress*100,'.2f'), status)
+	sys.stdout.write(text)
+	sys.stdout.flush()
 
 def clock(i,Total,stat):
 	Total = Total - 1
 	time.sleep(0.1)
 	update_progress(i/Total,stat)
 
+def exist(path):
+	try:
+		db.files_list_folder_get_latest_cursor(path)
+		return True
+	except:
+		return False
 
 #####################################################################################################################
 #	File/Folder Check
 #####################################################################################################################
 
-home = os.path.expanduser("~")
-
 checkPoint1 = 1
 while checkPoint1 > 0:
-	loc_path = input("Please paste the path of file you want to upload >> \n")
+	#loc_path = input("Please paste the path of file you want to upload >> \n")
+	root.update()
+	loc_path = filedialog.askopenfilename()
 
+	os.chdir(home)
+	
 	if os.path.exists(loc_path) == True :
 		if os.path.isfile(loc_path) == True:
-			print("Packing your cargo..." , end=' ')
 			dbFileName = os.path.basename(loc_path)
 			dbZipName = dbFileName.split('.')[0]+'.zip'
+			print("Packing your cargo..." , end=' ')
 			with zipfile.ZipFile(dbZipName,'w') as dbzip:
 				dbzip.write(loc_path, dbFileName)
 			print("Done#")
 			print("Package in this cargo:")
 			print(dbzip.namelist())
+			#print(os.getcwd())
 			time.sleep(1)
 
 		elif os.path.isdir(loc_path) == True:
-			print("Packing your cargo..." , end=' ')
-			dbFileName = os.path.basename(loc_path)
-			dbZipName = dbFileName.split('.')[0]+'.zip'
-			numInCargo = len([name for name in os.listdir(loc_path) if os.path.isfile(os.path.join(loc_path, name))])
-			with zipfile.ZipFile(dbZipName,'w') as dbzip:
-				i = 0
-				for root, dirs, files in os.walk(loc_path):
-					for file in files:
-						dbzip.write(os.path.join(loc_path,file), file)
-						clock(i,numInCargo,statName[1])
-						i += 1
+			dbFileName = os.path.dirname(loc_path)
+			dbDirName = os.path.dirname(dbFileName)
+			dbFileName = dbFileName.replace(dbDirName+'/','')
+			dbZipName = dbFileName + '.zip'
+			dbZipPath = os.path.dirname(loc_path)
+			print("Packing your cargo...")
+			numInCargo = len([name for name in os.listdir(loc_path) if not name.startswith('.')])
+
 			print("%s packages are in this cargo:" %(numInCargo))
-			for i in dbzip.namelist():
-				if not i.startswith('.'):
-					print('[',i,']')
+
+			os.system('cd "%s";zip -r "%s" "%s"' %(dbDirName,dbZipName,dbFileName))
+			os.system('cd %s;mv "%s" "%s"' %(dbDirName,dbZipName,os.path.join(home+'/'+dbZipName)))
+			print('Packing your cargo... #Done')
 			time.sleep(1)
 
 		else:
@@ -86,6 +154,7 @@ while checkPoint1 > 0:
 			exit(0)
 
 		checkPoint1 = 0
+	
 	else:
 		print("Please check the dir you paste is valid or the file is exist or not")
 		checkPoint1 = 1
@@ -94,50 +163,50 @@ while checkPoint1 > 0:
 #	Ready to upload
 #####################################################################################################################
 
-loc_path = os.path.join(home,dbZipName)
-
+loc_path = os.path.join(home+'/',dbZipName)
 file_size = os.path.getsize(loc_path)
 threshold = 5 * 1024 * 1024 # 5 MB
 chunk_size = 1024 * 1024 # 1 MB
-
-db_Dir = os.path.join('App Path',dbZipName)
-db = dropbox.Dropbox('APP Token')
-
+ 
+db = dropbox.Dropbox(access_token)
+ 
+db_Dir = os.path.join('/',dbZipName)
+ 
 if file_size < threshold :
 	print("Prepare to Upload...")
 	f = open(loc_path,'rb')
-
+ 
 	# Ticking
 	clock(f.tell(), file_size,statName[2])
 	data = f.read()
-
-	dbUpload = db.files_upload(data, db_Dir)
+ 
+	dbUpload = db.files_upload(data, db_Dir, autorename=True)
 	dbShare = db.sharing_create_shared_link(db_Dir,short_url=True)
 	dbShareLink = dbShare.url
 	# Ticking
 	clock(f.tell(), file_size,statName[2])
 	f.close()
-
+ 
 	os.remove(loc_path)
 	print("Piece of cake ;) ")
-
+ 
 else:
 	print("Prepare to Upload...")
 	f = open(loc_path,'rb')
-
+ 
 	# Ticking
 	clock(f.tell(), file_size,statName[2])
-
+ 
 	data = f.read(chunk_size)
 	upload_session_result = db.files_upload_session_start(data)
-
+ 
 	# Ticking
 	clock(f.tell(), file_size,statName[2])
-
+ 
 	session_id = upload_session_result.session_id
 	cursor = dropbox.files.UploadSessionCursor(session_id, offset=f.tell())
-	commit = dropbox.files.CommitInfo(path=db_Dir)
-
+	commit = dropbox.files.CommitInfo(path=db_Dir,autorename=True)
+ 
 	while f.tell() < file_size:
 		if ((file_size - f.tell()) <= chunk_size):
 			data = f.read(chunk_size)
@@ -148,11 +217,11 @@ else:
 			cursor.offset = f.tell()
 		# Ticking
 		clock(f.tell(), file_size,statName[2])
-
+ 
 	dbShare = db.sharing_create_shared_link(db_Dir,short_url=True)
 	dbShareLink = dbShare.url
 	f.close()
-
+ 
 	os.remove(loc_path)
 
 
@@ -183,7 +252,7 @@ html = '''
 </table>
 '''  % (dbShareLink, dbFileName, dbShareLink)
 
-clipboard.copy(html)
+clipboard.copy(dbShareLink)
 
 #####################################################################################################################
 #	Session End
