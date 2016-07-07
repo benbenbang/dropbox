@@ -28,8 +28,8 @@ if __name__ == '__main__':
 	app.mainloop()
 '''
 
-root = tk.Tk()
-root.withdraw()
+# root = tk.Tk()
+# root.withdraw()
 
 
 print("\nUpload You Attachments to Dropbox!")
@@ -114,9 +114,9 @@ def exist(path):
 
 checkPoint1 = 1
 while checkPoint1 > 0:
-	#loc_path = input("Please paste the path of file you want to upload >> \n")
-	root.update()
-	loc_path = filedialog.askopenfilename()
+	loc_path = input("Please paste the path of file you want to upload >> \n")
+	# root.update()
+	# loc_path = filedialog.askopenfilename()
 
 	os.chdir(home)
 	
